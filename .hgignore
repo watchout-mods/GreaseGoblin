@@ -1,0 +1,5 @@
+syntax: regexp
+^Libs/
+
+syntax: glob
+fetchlibs.py

@@ -1,0 +1,26 @@
+## Interface: 50200
+## Title: Grease Goblin
+## Version: 1
+## Notes: In-game automated scripting suite |cFFAAAAAAby watchout@curse.com|r
+## SavedVariables: Greasegoblins
+## OptionalDeps: Ace3
+## LoadManagers: AddonLoader, LoadIT
+## X-LoadOn-Always: delayed
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\AceAddon-3.0\AceAddon-3.0.lua
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.lua
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.lua
+Libs\AceEvent-3.0\AceEvent-3.0.lua
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0.lua
+
+# Main
+Grease Goblin.lua
+EditboxWidget.lua
+Localization.lua
+Options.lua
+
