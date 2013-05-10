@@ -19,7 +19,7 @@ Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceLocale-3.0\AceLocale-3.0.lua
 
 # Main
-Grease Goblin.lua
+GreaseGoblin.lua
 EditboxWidget.lua
 Localization.lua
 Options.lua
