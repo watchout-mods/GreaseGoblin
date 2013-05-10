@@ -327,7 +327,7 @@ local function Constructor()
 	local editBox = CreateFrame("EditBox", ("%s%dEdit"):format(Type, widgetNum), scrollFrame)
 	editBox:SetAllPoints()
 	--editBox:SetFontObject(ChatFontNormal)
-	editBox:SetFont("Interface\\Addons\\Grease Goblin\\UbuntuMono-R.ttf", 13, "")
+	editBox:SetFont("Interface\\Addons\\GreaseGoblin\\UbuntuMono-R.ttf", 13, "")
 	--local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", "Jack Input");
 	--editBox:SetFont(fontPath, 13, "")
 	editBox:SetMultiLine(true)
