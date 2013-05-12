@@ -40,7 +40,7 @@ local function CreateOptionsTable()
 				width = "half",
 				func = function()
 					local i = 1;
-					local p = Addon.Goblins.profile;
+					local p = Addon.Options.profile.Scripts;
 					while p["new "..i] do
 						i = i+1;
 					end
@@ -50,7 +50,7 @@ local function CreateOptionsTable()
 		}
 	}
 	
-	for k,v in pairs(Addon.Goblins.profile) do
+	for k,v in pairs(Addon.Options.profile.Scripts) do
 		if k:match("^%w") then
 			options.args["goblin_"..k] = {
 				name = k,
@@ -67,8 +67,9 @@ local function CreateOptionsTable()
 						get = function(info) return k end,
 						set = function(info, val)
 							if val ~= info.arg then
-								Addon.Goblins.profile[val] = Addon.Goblins.profile[info.arg];
-								Addon.Goblins.profile[info.arg] = nil;
+								local S = Addon.Options.profile.Scripts;
+								S[val] = S[info.arg];
+								S[info.arg] = nil;
 							end
 						end,
 						
@@ -102,7 +103,7 @@ local function CreateOptionsTable()
 						multiline = 15,
 						dialogControl = "CodeEditBox",
 						arg = k,
-						get = function(info) return Addon.Goblins.profile[info.arg] end,
+						get = function(info) return Addon.Options.profile.Scripts[info.arg] end,
 						set = function(info, val) Addon:UpdateGoblin(info.arg, val) end,
 					},
 				},

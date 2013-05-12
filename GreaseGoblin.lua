@@ -1,4 +1,5 @@
 local MAJOR, Addon = ...;
+local DBVERSION = 2;
 LibStub("AceAddon-3.0"):NewAddon(Addon, MAJOR,
 	"AceEvent-3.0"
 );
@@ -7,28 +8,22 @@ local pairs, tremove, max
     = pairs, tremove, max;
 
 --[[ -----------------------------   OPTIONS  ----------------------------- ]]--
-local DefaultEditorOptions = {
+local DefaultOptions = {
 	profile = {
-		__version   = 1,
-		Syntax      = "Lua", -- Sets the default syntax scheme
-		Highlight   = true,  -- Enable or Disable syntax highlighting
-		AutoIndent  = true,  -- automatically indent on new line
-		SmartIndent = false, -- improves auto-indent to semantic awareness
-		AutoSuggest = false, -- other possible values are: TOP, RIGHT, BOTTOM, LEFT,
-		LineNumbers = false, -- show line numbers
-		TabWidth    = 4,
-		TabToSpaces = false, -- convert tabs to spaces automatically?
-	}
-}
-
-local DefaultGoblins = {
-	profile = {
-		["?"] = 1, -- This is the db version number
-		Hello = [==[
--- OnLoad: true
-print("Hello World!", ...);
-]==]
-	}
+		_Version = false, -- This is the db version number
+		
+		Editor = {
+			Syntax      = "Lua", -- Sets the default syntax scheme
+			Highlight   = true,  -- Enable or Disable syntax highlighting
+			AutoIndent  = true,  -- automatically indent on new line
+			SmartIndent = false, -- improves auto-indent to semantic awareness
+			AutoSuggest = false, -- 
+			LineNumbers = false, -- show line numbers
+			TabWidth    = 4,
+			TabToSpaces = false, -- convert tabs to spaces automatically?
+		},
+		Scripts = {},
+	},
 };
 
 --[[ ------------------------  PRIVATE  VARIABLES  ------------------------ ]]--
@@ -38,8 +33,8 @@ local GoblinCache = setmetatable({
 }, {
 --	__mode = "v",
 	__index = function(self, id)
-		if Addon.Goblins.profile[id] then
-			local g = Addon:PrepareGoblin(id, Addon.Goblins.profile[id]);
+		if Addon.Options.profile.Scripts[id] then
+			local g = Addon:PrepareGoblin(id, Addon.Options.profile.Scripts[id]);
 			self[id] = g;
 			return g;
 		end
@@ -51,12 +46,22 @@ local GoblinCache = setmetatable({
 function Addon:OnInitialize()
 	local AceDB = LibStub("AceDB-3.0");
 	-- load config from acedb-savedvariables
-	self.Options = AceDB:New("Greasegoblin_Options", DefaultEditorOptions, true);
-	self.Goblins = AceDB:New("Greasegoblins", DefaultGoblins, true);
+	self.Options = AceDB:New("Greasegoblins", DefaultOptions, true);
+	
+	local O = self.Options.profile;
+	if O._Version == false then
+		O._Version = DBVERSION;
+		if #O.Scripts == 0 then
+			O.Scripts.Hello = [==[
+-- OnLoad: true
+print("Hello World!", ...);
+]==]
+		end
+	end
 end
 
 function Addon:OnEnable()
-	for id, rawcode in pairs(self.Goblins.profile) do
+	for id, rawcode in pairs(self.Options.profile.Scripts) do
 		local _dummy = GoblinCache[id];
 	end
 end
@@ -98,7 +103,7 @@ function Addon:UpdateGoblin(id, code)
 		GoblinCache[id].Frame:UnregisterAllEvents();
 		GoblinCache[id].Frame:Hide();
 		GoblinCache[id] = nil;
-		Addon.Goblins.profile[id] = code;
+		self.Options.profile.Scripts[id] = code;
 		local dummy = GoblinCache[id];
 	end
 end
@@ -106,7 +111,7 @@ end
 function Addon:DeleteGoblin(id, ...)
 	if id ~= "?" then
 		GoblinCache[id] = nil;
-		Addon.Goblins.profile[id] = nil;
+		self.Options.profile.Scripts[id] = nil;
 	end
 end
 
