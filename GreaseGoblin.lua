@@ -70,7 +70,8 @@ end
 -- Prepares a Goblin (script) with ID `id`
 -- You probably don't want to call this externally.
 function Addon:PrepareGoblin(id, rawcode)
-	local Goblin = {};
+	local Goblin, isinit = {}, false;
+	local tpl = "return function(self, ...) %s end";
 	Goblin.Code = rawcode;
 	Goblin.Frame = CreateFrame("frame");
 	for line in rawcode:gmatch("(.-)[\n\r]+") do
@@ -80,13 +81,17 @@ function Addon:PrepareGoblin(id, rawcode)
 			Goblin.Frame:RegisterEvent(value);
 		elseif key == "OnLoad" and value == "true" then
 			self:Queue(id, "LOAD");
+		elseif key == "IsInit" and value == "true" then
+			self:Queue(id, "LOAD");
+			tpl = "%s";
 		elseif key == nil then
 			break; -- only allow the first lines of the script for special comments
 		else
 			-- ignore unknown keys
 		end
 	end
-	Goblin.Function = assert(loadstring("return function(self, ...) "..rawcode.." end;", id))();
+	
+	Goblin.Function = assert(loadstring(tpl:format(rawcode), id))();
 	Goblin.Frame:SetScript("OnEvent", function(self, ...)
 		return Goblin:Function(...);
 	end);
