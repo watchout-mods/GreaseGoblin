@@ -82,7 +82,7 @@ local function CreateOptionsTable()
 						width = "half",
 						arg = k,
 						func = function(info)
-							Addon:RunGoblin(info.arg);
+							Addon:RunGoblin(info.arg, "EXECUTE");
 						end
 					},
 					delete = {
