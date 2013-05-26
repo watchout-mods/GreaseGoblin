@@ -28,6 +28,7 @@ local DefaultOptions = {
 
 --[[ ------------------------  PRIVATE  VARIABLES  ------------------------ ]]--
 local Empty = function() end;
+local GoblinMetatable;
 local GoblinCache = setmetatable({
 	["?"] = Empty,
 }, {
@@ -70,19 +71,18 @@ end
 -- Prepares a Goblin (script) with ID `id`
 -- You probably don't want to call this externally.
 function Addon:PrepareGoblin(id, rawcode)
-	local Goblin, isinit = {}, false;
-	local tpl = "return function(self, ...) %s end";
-	Goblin.Code = rawcode;
-	Goblin.Frame = CreateFrame("frame");
+	local Goblin = setmetatable({ Code = rawcode, Frame = CreateFrame("frame")},
+		GoblinMetatable);
+	local isinit, tpl = false, "return function(self, ...) %s end";
 	for line in rawcode:gmatch("(.-)[\n\r]+") do
 		local key, value = line:match("^%-%-%s*(.-)%s*:%s*(.-)%s*$");
 		--print("match", key, value, "[END]");
 		if key == "OnEvent" then
 			Goblin.Frame:RegisterEvent(value);
 		elseif key == "OnLoad" and value == "true" then
-			self:Queue(id, "LOAD");
+			Addon:Queue(id, "LOAD");
 		elseif key == "IsInit" and value == "true" then
-			self:Queue(id, "LOAD");
+			Addon:Queue(id, "LOAD");
 			tpl = "%s";
 		elseif key == nil then
 			break; -- only allow the first lines of the script for special comments
@@ -108,7 +108,7 @@ function Addon:UpdateGoblin(id, code)
 		GoblinCache[id].Frame:UnregisterAllEvents();
 		GoblinCache[id].Frame:Hide();
 		GoblinCache[id] = nil;
-		self.Options.profile.Scripts[id] = code;
+		Addon.Options.profile.Scripts[id] = code;
 		local dummy = GoblinCache[id];
 	end
 end
@@ -116,7 +116,7 @@ end
 function Addon:DeleteGoblin(id, ...)
 	if id ~= "?" then
 		GoblinCache[id] = nil;
-		self.Options.profile.Scripts[id] = nil;
+		Addon.Options.profile.Scripts[id] = nil;
 	end
 end
 
@@ -144,3 +144,28 @@ function Addon:Queue(id, ...)
 	QueueWorker:Show();
 end
 
+local GoblinPrototype = {
+	RegisterEvent = function(self, Event, Callback)
+		local goblin = self;
+		self.Frame:RegisterEvent(Event);
+		if self.Frame:IsEventRegistered(Event) then
+			self.EventHandlers[Event] = Callback;
+			self.Frame:SetScript("OnEvent", function(self, e, ...)
+				if goblin.EventHandlers[Event] then
+					pcall(goblin.EventHandlers[Event])
+				end
+			end);
+		end
+	end,
+	UnregisterEvent = function(self, Event)
+		self.EventHandlers[Event] = nil;
+		self.Frame:UnregisterEvent(Event);
+	end,
+	
+}
+GoblinMetatable = {
+	__index = GoblinPrototype,
+	__call = function(self, ...)
+		return self:Function(...);
+	end,
+}
