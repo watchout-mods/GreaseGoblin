@@ -61,6 +61,40 @@ end
 --[[-----------------------------------------------------------------------------
 Scripts
 -------------------------------------------------------------------------------]]
+local function OnTabPressed(self, ...)
+	if IsShiftKeyDown() then -- Detab line
+		local t, c = self:GetText(), self:GetCursorPosition();
+		c = (t:find("\n", c) or (c+1))-1;
+		t = t:sub(1, c);
+		local pos, _, endpos = t:match("\n()(% % ?% ?% ?)()[^\n]*$");
+		if pos then
+			t = self:GetText();
+			t = t:sub(1, pos-1) .. t:sub(endpos);
+			self:SetText(t);
+			self:SetCursorPosition(pos-1);
+			
+			-- Mark edit box as dirty
+			local this = self.obj
+			this:Fire("OnTextChanged", this.editBox:GetText())
+			this.button:Enable()
+		end
+	else -- Entab
+		self:Insert("    ");
+	end
+end
+
+local function OnEnterPressed(self, ...)
+	local t = self:GetText();
+	t = t:sub(1, self:GetCursorPosition());
+	local pos, indent = t:match("\n()(% +)[^\n]*$");
+	
+	if indent then
+		self:Insert("\n"..indent);
+	else
+		self:Insert("\n");
+	end
+end
+
 local function OnClick(self)                                                     -- Button
 	self = self.obj
 	self.editBox:ClearFocus()
@@ -337,6 +371,8 @@ local function Constructor()
 	editBox:SetScript("OnCursorChanged", OnCursorChanged)
 	editBox:SetScript("OnEditFocusLost", OnEditFocusLost)
 	editBox:SetScript("OnEnter", OnEnter)
+	editBox:SetScript("OnTabPressed", OnTabPressed)
+	editBox:SetScript("OnEnterPressed", OnEnterPressed)
 	editBox:SetScript("OnEscapePressed", editBox.ClearFocus)
 	editBox:SetScript("OnLeave", OnLeave)
 	editBox:SetScript("OnMouseDown", OnReceiveDrag)
