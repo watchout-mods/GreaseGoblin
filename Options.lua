@@ -10,7 +10,7 @@ local function CreateLocalization()
 	L = AL:NewLocale(MAJOR, locale, true);
 	L.ADDONNAME = ADDON;
 	L.NAME = "Name";
-	L.ADDONDESC = "Get those filthy grease goblins to work for you!";
+	L.ADDONDESC = "Get those greasy goblins to work for you!";
 	L.EXECUTE = "Run now";
 	L.CODENAME = "Source code";
 	
