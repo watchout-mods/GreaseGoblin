@@ -91,12 +91,27 @@ function Addon:PrepareGoblin(id, rawcode)
 		end
 	end
 	
-	Goblin.Function = assert(loadstring(tpl:format(rawcode), id))();
-	Goblin.Frame:SetScript("OnEvent", function(self, ...)
-		return Goblin:Function(...);
-	end);
+	local f, err = loadstring(tpl:format(rawcode), id);
+	if f then
+		local d, f = xpcall(function() return f(Goblin) end, geterrorhandler());
+		
+		if d and f then
+			Goblin.Function = f;
+			Goblin.Frame:SetScript("OnEvent", function(self, ...)
+				return Goblin:Function(...);
+			end);
+		
+			return Goblin;
+		end
+	end
 	
-	return Goblin;
+	if err then
+		geterrorhandler()(err);
+	end
+	
+	Goblin.Frame:UnregisterAllEvents();
+	Goblin.Frame:SetScript("OnEvent");
+	Goblin.Frame:Hide();
 end
 
 function Addon:RunGoblin(id, ...)
@@ -160,6 +175,10 @@ local GoblinPrototype = {
 	UnregisterEvent = function(self, Event)
 		self.EventHandlers[Event] = nil;
 		self.Frame:UnregisterEvent(Event);
+	end,
+	UnregisterAllEvents = function(self)
+		self.EventHandlers = {};
+		self.Frame:UnregisterAllEvents();
 	end,
 	
 }
