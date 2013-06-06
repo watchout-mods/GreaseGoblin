@@ -84,14 +84,18 @@ local function OnTabPressed(self, ...)
 end
 
 local function OnEnterPressed(self, ...)
-	local t = self:GetText();
-	t = t:sub(1, self:GetCursorPosition());
-	local pos, indent = t:match("\n()(% +)[^\n]*$");
-	
-	if indent then
-		self:Insert("\n"..indent);
+	if IsControlKeyDown() then
+		self.obj.button:Click();
 	else
-		self:Insert("\n");
+		local t = self:GetText();
+		t = t:sub(1, self:GetCursorPosition());
+		local pos, indent = t:match("\n()(% +)[^\n]*$");
+		
+		if indent then
+			self:Insert("\n"..indent);
+		else
+			self:Insert("\n");
+		end
 	end
 end
 
