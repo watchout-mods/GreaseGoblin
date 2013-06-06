@@ -2,32 +2,8 @@ local MODULE, ADDON, Addon = "Options", ...;
 local MAJOR = ADDON.."#"..MODULE;
 local Module = Addon:NewModule(MODULE);
 
-local function CreateLocalization()
-	local AL = LibStub("AceLocale-3.0");
-	local L, locale;
-	
-	locale = "enUS";
-	L = AL:NewLocale(MAJOR, locale, true);
-	L.ADDONNAME = ADDON;
-	L.NAME = "Name";
-	L.ADDONDESC = "Get those greasy goblins to work for you!";
-	L.EXECUTE = "Run now";
-	L.CODENAME = "Source code";
-	
-	locale = "deDE";
-	L = AL:NewLocale(MAJOR, locale);
-	if L then
-		L.ADDONNAME = ADDON;
-		L.ADDONDESC = "";
-		L.EXECUTE = "Jetzt ausführen";
-		L.CODENAME = "Quelltext";
-	end
-	
-	return AL:GetLocale(MAJOR);
-end
-
 local function CreateOptionsTable()
-	local L = CreateLocalization();
+	local L = Addon:GetLocale();
 	
 	local options = {
 		type = "group",

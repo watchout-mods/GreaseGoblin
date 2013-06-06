@@ -8,7 +8,7 @@ local AL, L = LibStub("AceLocale-3.0");
 L = AL:NewLocale(MAJOR, "enUS", true);
 L.ADDONNAME = ADDON;
 L.NAME = "Goblin name";
-L.ADDONDESC = "Get those filthy grease goblins to work for you!";
+L.ADDONDESC = "Get those greasy goblins to work for you!";
 L.EXECUTE = "Run now";
 L.CODENAME = "Source code";
 
