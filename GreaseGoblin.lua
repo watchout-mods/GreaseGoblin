@@ -71,8 +71,8 @@ end
 -- Prepares a Goblin (script) with ID `id`
 -- You probably don't want to call this externally.
 function Addon:PrepareGoblin(id, rawcode)
-	local Goblin = setmetatable({ Code = rawcode, Frame = CreateFrame("frame")},
-		GoblinMetatable);
+	local Goblin = setmetatable({ Code = rawcode, Frame = CreateFrame("frame"),
+		Metadata = {}}, GoblinMetatable);
 	local isinit, tpl = false, "return function(self, ...) %s end";
 	for line in rawcode:gmatch("(.-)[\n\r]+") do
 		local key, value = line:match("^%-%-%s*(.-)%s*:%s*(.-)%s*$");
@@ -85,9 +85,11 @@ function Addon:PrepareGoblin(id, rawcode)
 			Addon:Queue(id, "LOAD");
 			tpl = "%s";
 		elseif key == nil then
-			break; -- only allow the first lines of the script for special comments
+			if not line:match("^%-%-") then
+				break; -- only allow lines from the first block of uninterrupted comments
+			end
 		else
-			-- ignore unknown keys
+			Goblin.Metadata[key] = value; -- put any unknown k/v in .Metadata
 		end
 	end
 	
@@ -160,27 +162,15 @@ function Addon:Queue(id, ...)
 end
 
 local GoblinPrototype = {
-	RegisterEvent = function(self, Event, Callback)
-		local goblin = self;
+	RegisterEvent = function(self, Event)
 		self.Frame:RegisterEvent(Event);
-		if self.Frame:IsEventRegistered(Event) then
-			self.EventHandlers[Event] = Callback;
-			self.Frame:SetScript("OnEvent", function(self, e, ...)
-				if goblin.EventHandlers[Event] then
-					pcall(goblin.EventHandlers[Event])
-				end
-			end);
-		end
 	end,
 	UnregisterEvent = function(self, Event)
-		self.EventHandlers[Event] = nil;
 		self.Frame:UnregisterEvent(Event);
 	end,
 	UnregisterAllEvents = function(self)
-		self.EventHandlers = {};
 		self.Frame:UnregisterAllEvents();
 	end,
-	
 }
 GoblinMetatable = {
 	__index = GoblinPrototype,
