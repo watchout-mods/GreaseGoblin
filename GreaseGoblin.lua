@@ -23,6 +23,7 @@ local DefaultOptions = {
 			TabToSpaces = false, -- convert tabs to spaces automatically?
 		},
 		Scripts = {},
+		ScriptStates = {},
 	},
 };
 
@@ -37,6 +38,9 @@ local GoblinCache = setmetatable({
 		if Addon.Options.profile.Scripts[id] then
 			local g = Addon:PrepareGoblin(id, Addon.Options.profile.Scripts[id]);
 			self[id] = g;
+			if Addon.Options.profile.ScriptStates[id] ~= false then
+				Addon:EnableGoblin(id);
+			end
 			return g;
 		end
 		return Empty;
@@ -72,18 +76,19 @@ end
 -- You probably don't want to call this externally.
 function Addon:PrepareGoblin(id, rawcode)
 	local Goblin = setmetatable({ Code = rawcode, Frame = CreateFrame("frame"),
-		Metadata = {}}, GoblinMetatable);
-	local isinit, tpl = false, "return function(self, ...) %s end";
+		Metadata = {}, Events = {}}, GoblinMetatable);
+	local isinit, tpl = false, "return function(self,...) %s end";
 	for line in rawcode:gmatch("(.-)[\n\r]+") do
 		local key, value = line:match("^%-%-%s*(.-)%s*:%s*(.-)%s*$");
-		--print("match", key, value, "[END]");
 		if key == "OnEvent" then
-			Goblin.Frame:RegisterEvent(value);
+			Goblin.Events[#Goblin.Events+1] = value;
 		elseif key == "OnLoad" and value == "true" then
 			Addon:Queue(id, "LOAD");
 		elseif key == "IsInit" and value == "true" then
 			Addon:Queue(id, "LOAD");
 			tpl = "%s";
+		elseif key == "Enabled" and value ~= "true" then
+			Goblin.Enabled = true;
 		elseif key == nil then
 			if not line:match("^%-%-") then
 				break; -- only allow lines from the first block of uninterrupted comments
@@ -96,13 +101,11 @@ function Addon:PrepareGoblin(id, rawcode)
 	local f, err = loadstring(tpl:format(rawcode), id);
 	if f then
 		local d, f = xpcall(function() return f(Goblin) end, geterrorhandler());
-		
 		if d and f then
 			Goblin.Function = f;
 			Goblin.Frame:SetScript("OnEvent", function(self, ...)
 				return Goblin:Function(...);
 			end);
-		
 			return Goblin;
 		end
 	end
@@ -111,9 +114,31 @@ function Addon:PrepareGoblin(id, rawcode)
 		geterrorhandler()(err);
 	end
 	
+	Goblin.Events = {};
 	Goblin.Frame:UnregisterAllEvents();
-	Goblin.Frame:SetScript("OnEvent");
+	Goblin.Frame:SetScript("OnEvent", nil);
 	Goblin.Frame:Hide();
+end
+
+function Addon:EnableGoblin(id)
+	Addon.Options.profile.ScriptStates[id] = nil;
+	local g = GoblinCache[id];
+	local e, f = g.Events, g.Frame;
+	
+	for i=1, #e do
+		f:RegisterEvent(e[i]);
+	end
+	f:Show();
+end
+
+function Addon:DisableGoblin(id)
+	Addon.Options.profile.ScriptStates[id] = false;
+	GoblinCache[id].Frame:UnregisterAllEvents();
+	GoblinCache[id].Frame:Hide();
+end
+
+function Addon:IsGoblinEnabled(id)
+	return Addon.Options.profile.ScriptStates[id] ~= false;
 end
 
 function Addon:RunGoblin(id, ...)
