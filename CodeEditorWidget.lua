@@ -1,37 +1,31 @@
-local Type, Version = "CodeEditBox", 1
+local Type, Version = "CodeEditor", 1
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
-local pairs = pairs
+local _G, pairs
+    = _G, pairs
 
 -- WoW APIs
-local GetCursorInfo, GetSpellInfo, ClearCursor = GetCursorInfo, GetSpellInfo, ClearCursor
-local CreateFrame, UIParent = CreateFrame, UIParent
-local _G = _G
+local GetCursorInfo, GetSpellInfo, ClearCursor, CreateFrame, UIParent
+    = GetCursorInfo, GetSpellInfo, ClearCursor, CreateFrame, UIParent
 
 -- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
 -- List them here for Mikk's FindGlobals script
--- GLOBALS: ACCEPT, ChatFontNormal
-
-local wowMoP
-do
-	local _, _, _, interface = GetBuildInfo()
-	wowMoP = (interface >= 50000)
-end
+-- GLOBALS: SAVE_CHANGES (="Save Changes"), ChatFontNormal
 
 --[[-----------------------------------------------------------------------------
 Support functions
 -------------------------------------------------------------------------------]]
 
-if not GreaseGoblinEditBoxInsertLink then
+if not CodeEditorInsertLink then
 	-- upgradeable hook
-	hooksecurefunc("ChatEdit_InsertLink", function(...) return _G.GreaseGoblinEditBoxInsertLink(...) end)
+	hooksecurefunc("ChatEdit_InsertLink", function(...) return _G.CodeEditorInsertLink(...) end)
 end
 
-function _G.GreaseGoblinEditBoxInsertLink(text)
+function _G.CodeEditorInsertLink(text)
 	for i = 1, AceGUI:GetWidgetCount(Type) do
-		local editbox = _G[("MultiLineEditBox%uEdit"):format(i)]
+		local editbox = _G[("%s%uEdit"):format(Type, i)]
 		if editbox and editbox:IsVisible() and editbox:HasFocus() then
 			editbox:Insert(text)
 			return true
@@ -61,29 +55,81 @@ end
 --[[-----------------------------------------------------------------------------
 Scripts
 -------------------------------------------------------------------------------]]
-local function OnTabPressed(self, ...)
-	if IsShiftKeyDown() then -- Detab line
-		local t, c = self:GetText(), self:GetCursorPosition();
-		c = (t:find("\n", c) or (c+1))-1;
-		t = t:sub(1, c);
-		local pos, _, endpos = t:match("\n()(% % ?% ?% ?)()[^\n]*$");
-		if pos then
-			t = self:GetText();
-			t = t:sub(1, pos-1) .. t:sub(endpos);
-			self:SetText(t);
-			self:SetCursorPosition(pos-1);
-			
-			-- Mark edit box as dirty
-			local this = self.obj
-			this:Fire("OnTextChanged", this.editBox:GetText())
-			this.button:Enable()
-		end
-	else -- Entab
-		self:Insert("    ");
+local function GetSelection(self)
+	local T, C = self:GetText(), self:GetCursorPosition();
+	local L = #T;
+	
+	-- create a token not found in the string
+	local function gen() return "#"..tostring({}).."#"; end
+	local token = gen();
+	while T:find(token, 1, true) do token = gen(); end
+	
+	-- replace edit box content with token
+	self:Insert(token);
+	local NT = self:GetText();
+	local NL = #NT;
+	
+	-- find the token
+	local s = NT:find(token, 1, true)-1;
+	
+	-- length of selection
+	local len = L-(NL-#token);
+	
+	-- reset box
+	self:SetText(T);
+	if len > 0 then
+		self:HighlightText(s, s+len)
 	end
+	self:SetCursorPosition(C);
+	return s, s+len;
 end
 
-local function OnEnterPressed(self, ...)
+local function HasSelection(self)
+	local a, b = self:GetSelection();
+	return (a ~= b)
+end
+
+local function OnTabPressed(self, ...)                                -- EditBox
+	if IsControlKeyDown() then -- Debug
+		local a,b = self:GetSelection();
+		-- find start of first line in selection
+		local t = self:GetText();
+		
+		
+		return print(self:GetCursorPosition(), GetSelection(self));
+	end
+	local a,b = self:GetSelection();
+	if a==b and not IsShiftKeyDown() then
+		return self:Insert("    ");
+	end
+	local shift = IsShiftKeyDown();
+	if a~=b then -- in/dedent all lines in selection
+		
+	else
+		if IsShiftKeyDown() then -- Detab line
+			local t, c = self:GetText(), self:GetCursorPosition();
+			c = (t:find("\n", c+1) or (c+1))-1;
+			t = t:sub(1, c);
+			local pos, _, endpos = t:match("\n()(% % ?% ?% ?)()[^\n]*$");
+			if pos then
+				t = self:GetText();
+				t = t:sub(1, pos-1) .. t:sub(endpos);
+				self:SetText(t);
+				-- find first text character
+				pos = t:match("()[^ ]", pos)-1;
+				self:SetCursorPosition(min(pos, #t));
+				
+				-- Mark edit box as dirty
+				local this = self.obj
+				this:Fire("OnTextChanged", this.editBox:GetText())
+				this.button:Enable()
+			end
+		end
+	end
+	
+end
+
+local function OnEnterPressed(self, ...)                              -- EditBox
 	if IsControlKeyDown() then
 		self.obj.button:Click();
 	else
@@ -99,7 +145,7 @@ local function OnEnterPressed(self, ...)
 	end
 end
 
-local function OnClick(self)                                                     -- Button
+local function OnClick(self)                                           -- Button
 	self = self.obj
 	self.editBox:ClearFocus()
 	if not self:Fire("OnEnterPressed", self.editBox:GetText()) then
@@ -107,7 +153,7 @@ local function OnClick(self)                                                    
 	end
 end
 
-local function OnCursorChanged(self, _, y, _, cursorHeight)                      -- EditBox
+local function OnCursorChanged(self, _, y, _, cursorHeight)           -- EditBox
 	self, y = self.obj.scrollFrame, -y
 	local offset = self:GetVerticalScroll()
 	if y < offset then
@@ -120,12 +166,12 @@ local function OnCursorChanged(self, _, y, _, cursorHeight)                     
 	end
 end
 
-local function OnEditFocusLost(self)                                             -- EditBox
+local function OnEditFocusLost(self)                                  -- EditBox
 	self:HighlightText(0, 0)
 	self.obj:Fire("OnEditFocusLost")
 end
 
-local function OnEnter(self)                                                     -- EditBox / ScrollFrame
+local function OnEnter(self)                            -- EditBox / ScrollFrame
 	self = self.obj
 	if not self.entered then
 		self.entered = true
@@ -133,7 +179,7 @@ local function OnEnter(self)                                                    
 	end
 end
 
-local function OnLeave(self)                                                     -- EditBox / ScrollFrame
+local function OnLeave(self)                            -- EditBox / ScrollFrame
 	self = self.obj
 	if self.entered then
 		self.entered = nil
@@ -141,13 +187,13 @@ local function OnLeave(self)                                                    
 	end
 end
 
-local function OnMouseUp(self)                                                   -- ScrollFrame
+local function OnMouseUp(self)                                    -- ScrollFrame
 	self = self.obj.editBox
 	self:SetFocus()
 	self:SetCursorPosition(self:GetNumLetters())
 end
 
-local function OnReceiveDrag(self)                                               -- EditBox / ScrollFrame
+local function OnReceiveDrag(self)                      -- EditBox / ScrollFrame
 	local type, id, info = GetCursorInfo()
 	if type == "spell" then
 		info = GetSpellInfo(id, info)
@@ -165,11 +211,12 @@ local function OnReceiveDrag(self)                                              
 	self.button:Enable()
 end
 
-local function OnSizeChanged(self, width, height)                                -- ScrollFrame
+local function OnSizeChanged(self, width, height)                 -- ScrollFrame
 	self.obj.editBox:SetWidth(width)
 end
 
-local function OnTextChanged(self, userInput)                                    -- EditBox
+local function OnTextChanged(self, userInput)                         -- EditBox
+	--print(self:GetCursorPosition())
 	if userInput then
 		self = self.obj
 		self:Fire("OnTextChanged", self.editBox:GetText())
@@ -177,14 +224,14 @@ local function OnTextChanged(self, userInput)                                   
 	end
 end
 
-local function OnTextSet(self)                                                   -- EditBox
+local function OnTextSet(self)                                        -- EditBox
 	self:HighlightText(0, 0)
 	self:SetCursorPosition(self:GetNumLetters())
 	self:SetCursorPosition(0)
 	self.obj.button:Disable()
 end
 
-local function OnVerticalScroll(self, offset)                                    -- ScrollFrame
+local function OnVerticalScroll(self, offset)                     -- ScrollFrame
 	local editBox = self.obj.editBox
 	editBox:SetHitRectInsets(0, 0, offset, editBox:GetHeight() - offset - self:GetHeight())
 end
@@ -249,10 +296,10 @@ local methods = {
 	end,
 
 	["SetNumLines"] = function(self, value)
-		if not value or value < 4 then
-			value = 4
-		end
-		self.numlines = value
+		if not value               then value = 4 end 
+		if value > 0 and value < 4 then value = 4 end
+		self.expand   = value < 0
+		self.numlines = abs(value)
 		Layout(self)
 	end,
 
@@ -320,14 +367,14 @@ local function Constructor()
 	label:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -4)
 	label:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -4)
 	label:SetJustifyH("LEFT")
-	label:SetText(ACCEPT)
+	label:SetText(SAVE_CHANGES)
 	label:SetHeight(10)
 
-	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum), frame, wowMoP and "UIPanelButtonTemplate" or "UIPanelButtonTemplate2")
+	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum), frame, "UIPanelButtonTemplate" or "UIPanelButtonTemplate2")
 	button:SetPoint("BOTTOMLEFT", 0, 4)
 	button:SetHeight(22)
 	button:SetWidth(label:GetStringWidth() + 24)
-	button:SetText(ACCEPT)
+	button:SetText(SAVE_CHANGES)
 	button:SetScript("OnClick", OnClick)
 	button:Disable()
 	
@@ -384,6 +431,7 @@ local function Constructor()
 	editBox:SetScript("OnTextChanged", OnTextChanged)
 	editBox:SetScript("OnTextSet", OnTextSet)
 	editBox:SetScript("OnEditFocusGained", OnEditFocusGained)
+	editBox.GetSelection = GetSelection;
 	
 
 	scrollFrame:SetScrollChild(editBox)

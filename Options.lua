@@ -50,15 +50,20 @@ local function CreateOptionsTable()
 						end,
 						
 					},
-					empty = { name = "", type = "description", order = 2, width = "half", },
-					exec = {
-						name = "Execute",
+					toggle = {
+						name = function(i)
+							return Addon:IsGoblinEnabled(i.arg)and DISABLE or ENABLE;
+						end,
 						type = "execute",
-						order = 3,
+						order = 2,
 						width = "half",
 						arg = k,
 						func = function(info)
-							Addon:RunGoblin(info.arg, "EXECUTE");
+							if Addon:IsGoblinEnabled(info.arg) then
+								Addon:DisableGoblin(info.arg);
+							else
+								Addon:EnableGoblin(info.arg);
+							end
 						end
 					},
 					delete = {
@@ -71,13 +76,23 @@ local function CreateOptionsTable()
 							Addon:DeleteGoblin(info.arg);
 						end
 					},
+					exec = {
+						name = "Execute",
+						type = "execute",
+						order = 4,
+						width = "half",
+						arg = k,
+						func = function(info)
+							Addon:RunGoblin(info.arg, "EXECUTE");
+						end
+					},
 					code = {
 						name = L.CODENAME,
 						type = "input",
-						order = 4,
+						order = 5,
 						width = "full",
-						multiline = 15,
-						dialogControl = "CodeEditBox",
+						multiline = -15,
+						dialogControl = "CodeEditor",
 						arg = k,
 						get = function(info) return Addon.Options.profile.Scripts[info.arg] end,
 						set = function(info, val) Addon:UpdateGoblin(info.arg, val) end,
