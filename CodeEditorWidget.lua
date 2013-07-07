@@ -9,14 +9,45 @@ local _G, pairs
 -- WoW APIs
 local GetCursorInfo, GetSpellInfo, ClearCursor, CreateFrame, UIParent
     = GetCursorInfo, GetSpellInfo, ClearCursor, CreateFrame, UIParent
+local LuaTokenizer = LibStub("LuaTokenizer-1.0");
+local Highlighter = {}
+do
+	local op = "|cFFE8E2B7"
+	local token = {
+		NUMBER="|cffFFCD22", KEYWORD="|cff93C763", ID      ="|cffe0e2e4",
+		STRING="|cffEC7600", COMMENT="|cff66747B", GLOBALID="|cffd33682",
+		HEXNUM="|cff268bd2", ERROR  ="|cffdc322f", MLSTRING="|cffEC7600",
+		["<="]=op,[">="]=op,["=="]=op,["~="]=op,[".."]=op,["--"]=op,["..."]=op,
+		["<"]=op,[">"]=op,["="]=op,["^"]=op,["/"]=op,["*"]=op,["+"]=op,["-"]=op,
+		["%"]=op,["#"]=op,["-"]=op,[","]=op,["["]=op,["]"]=op,["("]=op,[")"]=op,
+		["{"]=op,["}"]=op,[":"]=op,["."]=op,[";"]=op }
 
+	local function cb(t, V, LS, LE, CS, CE, ...)
+		if t == "\t" then -- normalizes tabs
+			return '    ';
+		elseif t == "NEWLINE" then -- normalizes newlines
+			return "\r\n";
+		elseif token[t] then
+			return ('%s%s|r'):format(token[t], V or t or "");
+		end
+		return V or t;
+	end
+	function Highlighter:Highlight(str)
+		return table.concat(LuaTokenizer:Tokenize(str, cb));
+	end
+
+	function Highlighter:StripColors(str)
+		return str:gsub("||","|!"):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):gsub("|!","||");
+	end
+end
+local LibHighlight = LibStub("LuaTokenizer-1.0");
 -- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
 -- List them here for Mikk's FindGlobals script
 -- GLOBALS: SAVE_CHANGES (="Save Changes"), ChatFontNormal
 
---[[-----------------------------------------------------------------------------
+--[[----------------------------------------------------------------------------
 Support functions
--------------------------------------------------------------------------------]]
+------------------------------------------------------------------------------]]
 
 if not CodeEditorInsertLink then
 	-- upgradeable hook
@@ -27,7 +58,7 @@ function _G.CodeEditorInsertLink(text)
 	for i = 1, AceGUI:GetWidgetCount(Type) do
 		local editbox = _G[("%s%uEdit"):format(Type, i)]
 		if editbox and editbox:IsVisible() and editbox:HasFocus() then
-			editbox:Insert(text)
+			editbox:Insert(text:gsub("|", "||"))
 			return true
 		end
 	end
@@ -52,9 +83,9 @@ local function Layout(self)
 	end
 end
 
---[[-----------------------------------------------------------------------------
+--[[----------------------------------------------------------------------------
 Scripts
--------------------------------------------------------------------------------]]
+------------------------------------------------------------------------------]]
 local function GetSelection(self)
 	local T, C = self:GetText(), self:GetCursorPosition();
 	local L = #T;
@@ -90,11 +121,10 @@ local function HasSelection(self)
 end
 
 local function OnTabPressed(self, ...)                                -- EditBox
-	if IsControlKeyDown() then -- Debug
+	if false and IsControlKeyDown() then -- Debug
 		local a,b = self:GetSelection();
 		-- find start of first line in selection
 		local t = self:GetText();
-		
 		
 		return print(self:GetCursorPosition(), GetSelection(self));
 	end
@@ -115,13 +145,13 @@ local function OnTabPressed(self, ...)                                -- EditBox
 				t = self:GetText();
 				t = t:sub(1, pos-1) .. t:sub(endpos);
 				self:SetText(t);
-				-- find first text character
+				-- find first non-whitespace character
 				pos = t:match("()[^ ]", pos)-1;
 				self:SetCursorPosition(min(pos, #t));
 				
 				-- Mark edit box as dirty
 				local this = self.obj
-				this:Fire("OnTextChanged", this.editBox:GetText())
+				this:Fire("OnTextChanged", self:GetText())
 				this.button:Enable()
 			end
 		end
@@ -148,7 +178,7 @@ end
 local function OnClick(self)                                           -- Button
 	self = self.obj
 	self.editBox:ClearFocus()
-	if not self:Fire("OnEnterPressed", self.editBox:GetText()) then
+	if not self:Fire("OnEnterPressed", self:GetText()) then
 		self.button:Disable()
 	end
 end
@@ -219,7 +249,7 @@ local function OnTextChanged(self, userInput)                         -- EditBox
 	--print(self:GetCursorPosition())
 	if userInput then
 		self = self.obj
-		self:Fire("OnTextChanged", self.editBox:GetText())
+		self:Fire("OnTextChanged", self:GetText())
 		self.button:Enable()
 	end
 end
@@ -275,7 +305,7 @@ local methods = {
 			self.button:Disable()
 		else
 			editBox:EnableMouse(true)
-			editBox:SetTextColor(1, 1, 1)
+			editBox:SetTextColor(.9, .9, .9)
 			self.label:SetTextColor(1, 0.82, 0)
 			self.scrollFrame:EnableMouse(true)
 		end
@@ -304,11 +334,20 @@ local methods = {
 	end,
 
 	["SetText"] = function(self, text)
-		self.editBox:SetText(text)
+		self.editBox:SetText(Highlighter:Highlight(text:gsub("|","||")))
+		--self.editBox:SetText(text:gsub("|","||"))
 	end,
 
 	["GetText"] = function(self)
-		return self.editBox:GetText()
+		return Highlighter:StripColors(self.editBox:GetText()):gsub("||","|")
+	end,
+
+	["SetRealText"] = function(self, text)
+		self.editBox:SetText(text);
+	end,
+
+	["GetRealText"] = function(self)
+		return self.editBox:GetText();
 	end,
 
 	["SetMaxLetters"] = function (self, num)
@@ -370,7 +409,8 @@ local function Constructor()
 	label:SetText(SAVE_CHANGES)
 	label:SetHeight(10)
 
-	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum), frame, "UIPanelButtonTemplate" or "UIPanelButtonTemplate2")
+	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum),
+			frame, "UIPanelButtonTemplate" or "UIPanelButtonTemplate2")
 	button:SetPoint("BOTTOMLEFT", 0, 4)
 	button:SetHeight(22)
 	button:SetWidth(label:GetStringWidth() + 24)
@@ -411,8 +451,8 @@ local function Constructor()
 
 	local editBox = CreateFrame("EditBox", ("%s%dEdit"):format(Type, widgetNum), scrollFrame)
 	editBox:SetAllPoints()
-	--editBox:SetFontObject(ChatFontNormal)
 	editBox:SetFont("Interface\\Addons\\GreaseGoblin\\UbuntuMono-R.ttf", 13, "")
+	--editBox:SetFontObject(ChatFontNormal)
 	--local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", "Jack Input");
 	--editBox:SetFont(fontPath, 13, "")
 	editBox:SetMultiLine(true)
