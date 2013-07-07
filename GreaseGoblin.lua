@@ -4,8 +4,8 @@ LibStub("AceAddon-3.0"):NewAddon(Addon, MAJOR,
 	"AceEvent-3.0"
 );
 _G.greasegoblin = Addon; -- debug
-local pairs, tremove, max
-    = pairs, tremove, max;
+local pairs, tremove, max, gsub
+    = pairs, tremove, max, gsub;
 
 --[[ -----------------------------   OPTIONS  ----------------------------- ]]--
 local DefaultOptions = {
@@ -21,11 +21,15 @@ local DefaultOptions = {
 			LineNumbers = false, -- show line numbers
 			TabWidth    = 4,
 			TabToSpaces = false, -- convert tabs to spaces automatically?
-		},
+		}, 
 		Scripts = {},
 		ScriptStates = {},
 	},
 };
+local DefaultScript = [[
+-- OnLoad: true
+print("Hello World!", ...);
+]];
 
 --[[ ------------------------  PRIVATE  VARIABLES  ------------------------ ]]--
 local Empty = function() end;
@@ -37,7 +41,7 @@ local GoblinCache = setmetatable({
 	__index = function(self, id)
 		if Addon.Options.profile.Scripts[id] then
 			local g = Addon:PrepareGoblin(id, Addon.Options.profile.Scripts[id]);
-			self[id] = g;
+			self[id] = g or false;
 			if Addon.Options.profile.ScriptStates[id] ~= false then
 				Addon:EnableGoblin(id);
 			end
@@ -57,15 +61,13 @@ function Addon:OnInitialize()
 	if O._Version == false then
 		O._Version = DBVERSION;
 		if #O.Scripts == 0 then
-			O.Scripts.Hello = [==[
--- OnLoad: true
-print("Hello World!", ...);
-]==]
+			O.Scripts.Hello = DefaultScript;
 		end
 	end
 end
 
 function Addon:OnEnable()
+	local i=1
 	for id, rawcode in pairs(self.Options.profile.Scripts) do
 		local _dummy = GoblinCache[id];
 	end
@@ -77,8 +79,8 @@ end
 function Addon:PrepareGoblin(id, rawcode)
 	local Goblin = setmetatable({ Code = rawcode, Frame = CreateFrame("frame"),
 		Metadata = {}, Events = {}}, GoblinMetatable);
-	local isinit, tpl = false, "return function(self,...) %s end";
-	for line in rawcode:gmatch("(.-)[\n\r]+") do
+	local isinit, tpl = false, "return function(self,...) %s\nend";
+	for line in rawcode:gmatch("(.-)\r?\n") do
 		local key, value = line:match("^%-%-%s*(.-)%s*:%s*(.-)%s*$");
 		if key == "OnEvent" then
 			Goblin.Events[#Goblin.Events+1] = value;
@@ -123,18 +125,23 @@ end
 function Addon:EnableGoblin(id)
 	Addon.Options.profile.ScriptStates[id] = nil;
 	local g = GoblinCache[id];
-	local e, f = g.Events, g.Frame;
-	
-	for i=1, #e do
-		f:RegisterEvent(e[i]);
+	if g then
+		local e, f = g.Events, g.Frame;
+		
+		for i=1, #e do
+			f:RegisterEvent(e[i]);
+		end
+		f:Show();
 	end
-	f:Show();
 end
 
 function Addon:DisableGoblin(id)
 	Addon.Options.profile.ScriptStates[id] = false;
-	GoblinCache[id].Frame:UnregisterAllEvents();
-	GoblinCache[id].Frame:Hide();
+	local g = GoblinCache[id];
+	if g then
+		g.Frame:UnregisterAllEvents();
+		g.Frame:Hide();
+	end
 end
 
 function Addon:IsGoblinEnabled(id)
@@ -142,13 +149,19 @@ function Addon:IsGoblinEnabled(id)
 end
 
 function Addon:RunGoblin(id, ...)
-	GoblinCache[id].Function(GoblinCache[id], ...);
+	local g = GoblinCache[id];
+	if g then
+		g.Function(g, ...);
+	end
 end
 
 function Addon:UpdateGoblin(id, code)
 	if id ~= "?" then
-		GoblinCache[id].Frame:UnregisterAllEvents();
-		GoblinCache[id].Frame:Hide();
+		local g = GoblinCache[id];
+		if g then
+			g.Frame:UnregisterAllEvents();
+			g.Frame:Hide();
+		end
 		GoblinCache[id] = nil;
 		Addon.Options.profile.Scripts[id] = code;
 		local dummy = GoblinCache[id];
@@ -167,7 +180,8 @@ function Addon:Queue(id, ...)
 	Queue[#Queue+1] = (function(...)
 		local args = {...};
 		return function()
-			GoblinCache[id].Function(GoblinCache[id], unpack(args));
+			local g = GoblinCache[id];
+			if g then g.Function(g, unpack(args)); end
 		end
 	end)(...);
 	
