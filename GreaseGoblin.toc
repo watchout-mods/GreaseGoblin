@@ -17,6 +17,9 @@ Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.lua
 Libs\AceDBOptions-3.0\AceDBOptions-3.0.lua
+Libs\AceTimer-3.0\AceTimer-3.0.lua
+
+Libs\LuaTokenizer\LuaTokenizer-1.0.lua
 
 # Main
 GreaseGoblin.lua
