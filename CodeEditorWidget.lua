@@ -183,7 +183,7 @@ local function OnClick(self)                                           -- Button
 	end
 end
 
-local function OnCursorChanged(self, _, y, _, cursorHeight)           -- EditBox
+local function OnCursorChanged(self, x, y, _, cursorHeight)           -- EditBox
 	self, y = self.obj.scrollFrame, -y
 	local offset = self:GetVerticalScroll()
 	if y < offset then
