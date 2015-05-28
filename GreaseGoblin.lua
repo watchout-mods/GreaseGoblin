@@ -144,6 +144,15 @@ function Addon:DisableGoblin(id)
 	end
 end
 
+function Addon:ToggleGoblin(id)
+	if Addon:IsGoblinEnabled(id) then
+		Addon:DisableGoblin(id);
+	else
+		Addon:EnableGoblin(id);
+	end
+end
+
+
 function Addon:IsGoblinEnabled(id)
 	return Addon.Options.profile.ScriptStates[id] ~= false;
 end
