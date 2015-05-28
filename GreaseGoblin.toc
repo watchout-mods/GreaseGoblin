@@ -1,4 +1,4 @@
-## Interface: 50300
+## Interface: 60100
 ## Title: Grease Goblin
 ## Version: 2
 ## Notes: In-game automated scripting suite |cFFAAAAAAby watchout@curse.com|r
