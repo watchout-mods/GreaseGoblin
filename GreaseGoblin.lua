@@ -74,7 +74,7 @@ function Addon:OnEnable()
 end
 
 ---
--- Prepares a Goblin (script) with ID `id`
+-- Prepares a Goblin (script) with name `id`
 -- You probably don't want to call this externally.
 function Addon:PrepareGoblin(id, rawcode)
 	local Goblin = setmetatable({ Code = rawcode, Frame = CreateFrame("frame"),
@@ -86,14 +86,14 @@ function Addon:PrepareGoblin(id, rawcode)
 			Goblin.Events[#Goblin.Events+1] = value;
 		elseif key == "OnLoad" and value == "true" then
 			Addon:Queue(id, "LOAD");
-		elseif key == "IsInit" and value == "true" then
+		elseif key == "Prototype" and value == "true" then
 			Addon:Queue(id, "LOAD");
 			tpl = "%s";
 		elseif key == "Enabled" and value ~= "true" then
-			Goblin.Enabled = true;
+			Goblin.Enabled = false;
 		elseif key == nil then
 			if not line:match("^%-%-") then
-				break; -- only allow lines from the first block of uninterrupted comments
+				break; -- only parse lines from the first block of uninterrupted comments
 			end
 		else
 			Goblin.Metadata[key] = value; -- put any unknown k/v in .Metadata
@@ -122,6 +122,9 @@ function Addon:PrepareGoblin(id, rawcode)
 	Goblin.Frame:Hide();
 end
 
+---
+-- Enable a Goblin
+-- @param id The ID of the Goblin to act on
 function Addon:EnableGoblin(id)
 	Addon.Options.profile.ScriptStates[id] = nil;
 	local g = GoblinCache[id];
@@ -135,6 +138,9 @@ function Addon:EnableGoblin(id)
 	end
 end
 
+---
+-- Disable a Goblin
+-- @param id The ID of the Goblin to act on
 function Addon:DisableGoblin(id)
 	Addon.Options.profile.ScriptStates[id] = false;
 	local g = GoblinCache[id];
@@ -144,6 +150,9 @@ function Addon:DisableGoblin(id)
 	end
 end
 
+---
+-- Toggle the state of a Goblin
+-- @param id The ID of the Goblin to act on
 function Addon:ToggleGoblin(id)
 	if Addon:IsGoblinEnabled(id) then
 		Addon:DisableGoblin(id);
@@ -152,11 +161,17 @@ function Addon:ToggleGoblin(id)
 	end
 end
 
-
+---
+-- Return whether a Goblin is enabled
+-- @param id The ID of the Goblin to act on
 function Addon:IsGoblinEnabled(id)
 	return Addon.Options.profile.ScriptStates[id] ~= false;
 end
 
+---
+-- Encourage a Goblin to work
+-- @param id The ID of the Goblin to act on
+-- @param ... Additional arguments passed to the Goblin
 function Addon:RunGoblin(id, ...)
 	local g = GoblinCache[id];
 	if g then
@@ -164,6 +179,32 @@ function Addon:RunGoblin(id, ...)
 	end
 end
 
+---
+-- Rename a Goblin
+-- @param from The name of the Goblin to act on
+-- @param to   The new name of the Goblin
+function Addon:RenameGoblin(from, to)
+	local s = Addon.Options.profile.Scripts
+	if not s[to] then
+		s[to] = Addon:GoblinOrders(from);
+		GoblinCache[from], s[from] = nil, nil;
+		return GoblinCache[to] and true
+	else
+		return false
+	end
+end
+
+---
+-- Get the orders of a Goblin
+-- @param ID The name of the Goblin to act on
+function Addon:GoblinOrders(id)
+	return Addon.Options.profile.Scripts[id or "?"];
+end
+
+---
+-- Update the orders of a Goblin
+-- @param ID The name of the Goblin to act on
+-- @param code The orders of a Goblin
 function Addon:UpdateGoblin(id, code)
 	if id ~= "?" then
 		local g = GoblinCache[id];
@@ -177,7 +218,10 @@ function Addon:UpdateGoblin(id, code)
 	end
 end
 
-function Addon:DeleteGoblin(id, ...)
+---
+-- Remove a Goblin
+-- @param id The name of the Goblin to act on
+function Addon:DeleteGoblin(id)
 	if id ~= "?" then
 		GoblinCache[id] = nil;
 		Addon.Options.profile.Scripts[id] = nil;

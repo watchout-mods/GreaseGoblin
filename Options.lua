@@ -24,6 +24,13 @@ local function Window( ... )
 
 	local iName = AceGUI:Create("EditBox")
 	iName:SetLabel("Goblin name")
+	iName:SetCallback("OnEnterPressed", function(obj, event, text)
+		if Addon:RenameGoblin(Selected, text) then
+			this:Update(text)
+		else
+			iName:SetText(Selected)
+		end
+	end)
 
 	local bEnable = AceGUI:Create("Button")
 	bEnable:SetWidth(90)
