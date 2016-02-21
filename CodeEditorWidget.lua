@@ -1,3 +1,10 @@
+---
+-- DISCLAIMER: I have no clue where I originally got this from. I know that I
+-- (heavily) modified an existing widget, so I will take no credit for creating
+-- it.
+-- Though it is seriously buggy, so I intended from the start to write a new one
+-- just lacking the time to do so...
+
 local Type, Version = "CodeEditor", 1
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
