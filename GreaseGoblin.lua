@@ -21,7 +21,7 @@ local DefaultOptions = {
 			LineNumbers = false, -- show line numbers
 			TabWidth    = 4,
 			TabToSpaces = false, -- convert tabs to spaces automatically?
-		}, 
+		},
 		Scripts = {},
 		ScriptStates = {},
 	},
