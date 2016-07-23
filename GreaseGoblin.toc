@@ -1,6 +1,6 @@
-## Interface: 60200
+## Interface: 70000
 ## Title: Grease Goblin
-## Version: 3
+## Version: 1.2
 ## Notes: In-game automated scripting suite |cFFAAAAAAby watchout@curse.com|r
 ## SavedVariables: Greasegoblins
 ## OptionalDeps: Ace3
