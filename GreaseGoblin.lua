@@ -28,7 +28,8 @@ local DefaultOptions = {
 };
 local DefaultScript = [[
 -- OnLoad: true
-print("Hello World!", ...);
+print("Hello I'm your first grease goblin! Use /ggb to display the GUI!");
+print("My arguments are:", ...);
 ]];
 
 --[[ ------------------------  PRIVATE  VARIABLES  ------------------------ ]]--
