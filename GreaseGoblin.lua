@@ -1,9 +1,9 @@
 local MAJOR, Addon = ...;
 local DBVERSION = 2;
-LibStub("AceAddon-3.0"):NewAddon(Addon, MAJOR,
-	"AceEvent-3.0"
-);
+LibStub("AceAddon-3.0"):NewAddon(Addon, MAJOR, "AceEvent-3.0");
+
 _G.greasegoblin = Addon; -- debug
+
 local pairs, tremove, max, gsub
     = pairs, tremove, max, gsub;
 
@@ -53,6 +53,7 @@ local GoblinCache = setmetatable({
 });
 
 --[[ ----------------------------  ADDON CODE  ---------------------------- ]]--
+-- Ace-Addon OnInitialize handler
 function Addon:OnInitialize()
 	local AceDB = LibStub("AceDB-3.0");
 	-- load config from acedb-savedvariables
@@ -67,6 +68,7 @@ function Addon:OnInitialize()
 	end
 end
 
+-- Ace-Addon OnEnable handler
 function Addon:OnEnable()
 	local i=1
 	for id, rawcode in pairs(self.Options.profile.Scripts) do
@@ -74,9 +76,10 @@ function Addon:OnEnable()
 	end
 end
 
----
--- Prepares a Goblin (script) with name `id`
+--
+-- Prepares a Goblin (script) with name `id`.
 -- You probably don't want to call this externally.
+-- @param id The unique name of the Goblin to act on
 function Addon:PrepareGoblin(id, rawcode)
 	local Goblin = setmetatable({ Code = rawcode, Frame = CreateFrame("frame"),
 		Metadata = {}, Events = {}}, GoblinMetatable);
@@ -113,10 +116,12 @@ function Addon:PrepareGoblin(id, rawcode)
 		end
 	end
 	
+	-- This code is unreachable unless there was some error above
 	if err then
 		geterrorhandler()(err);
 	end
 	
+	-- Clean up the Goblin
 	Goblin.Events = {};
 	Goblin.Frame:UnregisterAllEvents();
 	Goblin.Frame:SetScript("OnEvent", nil);
@@ -124,8 +129,8 @@ function Addon:PrepareGoblin(id, rawcode)
 end
 
 ---
--- Enable a Goblin
--- @param id The ID of the Goblin to act on
+-- Enable a Goblin.
+-- @param id The unique name of the Goblin to act on
 function Addon:EnableGoblin(id)
 	Addon.Options.profile.ScriptStates[id] = nil;
 	local g = GoblinCache[id];
@@ -140,8 +145,8 @@ function Addon:EnableGoblin(id)
 end
 
 ---
--- Disable a Goblin
--- @param id The ID of the Goblin to act on
+-- Disable a Goblin.
+-- @param id The unique name of the Goblin to act on
 function Addon:DisableGoblin(id)
 	Addon.Options.profile.ScriptStates[id] = false;
 	local g = GoblinCache[id];
@@ -152,8 +157,8 @@ function Addon:DisableGoblin(id)
 end
 
 ---
--- Toggle the state of a Goblin
--- @param id The ID of the Goblin to act on
+-- Toggle the state of a Goblin.
+-- @param id The unique name of the Goblin to act on
 function Addon:ToggleGoblin(id)
 	if Addon:IsGoblinEnabled(id) then
 		Addon:DisableGoblin(id);
@@ -163,15 +168,15 @@ function Addon:ToggleGoblin(id)
 end
 
 ---
--- Return whether a Goblin is enabled
--- @param id The ID of the Goblin to act on
+-- Return whether a Goblin is working.
+-- @param id The unique name of the Goblin to investigate
 function Addon:IsGoblinEnabled(id)
 	return Addon.Options.profile.ScriptStates[id] ~= false;
 end
 
 ---
--- Encourage a Goblin to work
--- @param id The ID of the Goblin to act on
+-- Force a Goblin to work.
+-- @param id  The unique name of the Goblin to kic... I mean encourage.
 -- @param ... Additional arguments passed to the Goblin
 function Addon:RunGoblin(id, ...)
 	local g = GoblinCache[id];
@@ -181,9 +186,10 @@ function Addon:RunGoblin(id, ...)
 end
 
 ---
--- Rename a Goblin
+-- Rename a Goblin. They need not get used to an actual identity.
 -- @param from The name of the Goblin to act on
 -- @param to   The new name of the Goblin
+-- @return `true` if renaming was successful, false otherwise
 function Addon:RenameGoblin(from, to)
 	local s = Addon.Options.profile.Scripts
 	if not s[to] then
@@ -196,15 +202,16 @@ function Addon:RenameGoblin(from, to)
 end
 
 ---
--- Get the orders of a Goblin
--- @param ID The name of the Goblin to act on
+-- Get the orders of a Goblin.
+-- @param id The name of the Goblin to investigate
+-- @return The source code of the Goblin
 function Addon:GoblinOrders(id)
 	return Addon.Options.profile.Scripts[id or "?"];
 end
 
 ---
 -- Update the orders of a Goblin
--- @param ID The name of the Goblin to act on
+-- @param id The name of the Goblin to act on
 -- @param code The orders of a Goblin
 function Addon:UpdateGoblin(id, code)
 	if id ~= "?" then
@@ -254,6 +261,22 @@ function Addon:Queue(id, ...)
 	QueueWorker:Show();
 end
 
+---
+-- The prototype of a goblin
+-- @name Goblin (self)
+-- @class table
+-- @field Frame (UI-Object) The underlying WoW Frame widget. This frame is used
+--        for running the Goblin from its OnEvent handler. Break it and you keep
+--        it.
+-- @field Code (string) The source-code of the Goblin.
+--        Informative / Not used.
+-- @field Events (table) The events from the Metadata comment header.
+--        Not used after initialisation.
+-- @field Function (function) The function generated from the source-code.
+-- @field Metadata (table) Contains all metadata from the comment header.
+-- @field RegisterEvent (Method) Register this Goblin for an additional event.
+-- @field UnregisterEvent (Method) Unregister this Goblin from an event.
+-- @field UnregisterAllEvents (Method) Unregister this Goblin from all events.
 local GoblinPrototype = {
 	RegisterEvent = function(self, Event)
 		self.Frame:RegisterEvent(Event);
