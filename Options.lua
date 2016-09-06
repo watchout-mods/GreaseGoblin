@@ -11,6 +11,7 @@ local function Window( ... )
 	end)
 	f:SetTitle("Greasy Goblins")
 	f:SetStatusText("Status Bar")
+	f:SetWidth(860)
 	f:SetLayout("Fill")
 
 	-- Selection box
