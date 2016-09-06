@@ -17,7 +17,7 @@ if L then
 L.ADDONNAME = ADDON;
 L.NAME = "Goblinname";
 L.ADDONDESC = "";
-L.EXECUTE = "Jetzt ausführen";
+L.EXECUTE = "Ausf\195\188hren";
 L.CODENAME = "Quelltext";
 end
 
