@@ -124,8 +124,10 @@ local function Window( ... )
 			List:SetTree(tree)
 			if selection then
 				List:SelectByValue(selection)
-			elseif #tree > 0 then
-				List:SelectByPath(1)
+			elseif #tree >= 3 then -- select first if no selection but non-empty tree
+				List:SelectByValue(tree[3].value)
+			else -- else just create a new one ffs
+				List:SelectByValue(false) 
 			end
 		end,
 		GetSelected = function()

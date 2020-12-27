@@ -1,3 +1,6 @@
+---
+-- Grease goblin.
+-- Grease goblin is an add-on 
 local MAJOR, Addon = ...;
 local DBVERSION = 2;
 LibStub("AceAddon-3.0"):NewAddon(Addon, MAJOR, "AceEvent-3.0");
@@ -11,7 +14,6 @@ local pairs, tremove, max, gsub
 local DefaultOptions = {
 	profile = {
 		_Version = false, -- This is the db version number
-		
 		Editor = {
 			Syntax      = "Lua", -- Sets the default syntax scheme
 			Highlight   = true,  -- Enable or Disable syntax highlighting
@@ -263,20 +265,19 @@ end
 
 ---
 -- The prototype of a goblin
--- @name Goblin (self)
+-- @name Goblin
 -- @class table
--- @field Frame (UI-Object) The underlying WoW Frame widget. This frame is used
---        for running the Goblin from its OnEvent handler. Break it and you keep
---        it.
--- @field Code (string) The source-code of the Goblin.
---        Informative / Not used.
--- @field Events (table) The events from the Metadata comment header.
---        Not used after initialisation.
--- @field Function (function) The function generated from the source-code.
--- @field Metadata (table) Contains all metadata from the comment header.
--- @field RegisterEvent (Method) Register this Goblin for an additional event.
--- @field UnregisterEvent (Method) Unregister this Goblin from an event.
--- @field UnregisterAllEvents (Method) Unregister this Goblin from all events.
+-- @field Frame `UI-Object` The underlying WoW Frame widget. This frame is used
+--   for running the Goblin from its OnEvent handler. Break it and you keep it.
+-- @field Code `string` The source-code of the Goblin.
+--   Informative / Not used.
+-- @field Events `table` The events from the Metadata comment header.
+--   Not used after initialisation.
+-- @field Function `function` The function generated from the source-code.
+-- @field Metadata `table` Contains all metadata from the comment header.
+-- @field RegisterEvent `Method` Register this Goblin for an additional event.
+-- @field UnregisterEvent `Method` Unregister this Goblin from an event.
+-- @field UnregisterAllEvents `Method` Unregister this Goblin from all events.
 local GoblinPrototype = {
 	RegisterEvent = function(self, Event)
 		self.Frame:RegisterEvent(Event);
