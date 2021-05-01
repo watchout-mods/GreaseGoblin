@@ -14,10 +14,10 @@ There is also a chat-command `/ggb` or `/ggoblin` to open a (resizeable) configu
 Resources
 ----
 
-* [Sample scripts](http://wow.curseforge.com/addons/grease-goblin/pages/scripts/)
-* [Markup syntax](http://wow.curseforge.com/addons/grease-goblin/pages/syntax/)
+* [Sample scripts](https://github.com/watchout-mods/GreaseGoblin/wiki/Script-examples)
+* [Markup syntax](https://github.com/watchout-mods/GreaseGoblin/wiki/Syntax)
 * [API documentation](http://wow.curseforge.com/addons/grease-goblin/pages/api/)
-* [Goblin API](http://wow.curseforge.com/addons/grease-goblin/pages/goblin-api/)
+* [Goblin API](https://github.com/watchout-mods/GreaseGoblin/wiki/Goblin-API)
 
 To-Do
 --------
