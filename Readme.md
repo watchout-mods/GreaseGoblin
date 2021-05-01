@@ -4,15 +4,17 @@ Grease Goblin is an Addon that makes writing and distributing small *Scripts* qu
 
 The following example demonstrates the whole currently available markup:
 
-    -- OnLoad: true
-    -- OnEvent: ADDON_LOADED
-    -- OnEvent: SOME_OTHER_EVENT
-    print("Hello World!", ...);
+```lua
+-- OnLoad: true
+-- OnEvent: ADDON_LOADED
+-- OnEvent: SOME_OTHER_EVENT
+print("Hello World!", ...);
+```
 
 There is also a chat-command `/ggb` or `/ggoblin` to open a (resizeable) configuration window with only the **Grease Goblin** dialog.
 
 Resources
-----
+---------
 
 * [Sample scripts](https://github.com/watchout-mods/GreaseGoblin/wiki/Script-examples)
 * [Markup syntax](https://github.com/watchout-mods/GreaseGoblin/wiki/Syntax)
@@ -20,7 +22,7 @@ Resources
 * [Goblin API](https://github.com/watchout-mods/GreaseGoblin/wiki/Goblin-API)
 
 To-Do
---------
+-----
 
 * Better UI / editor (It is the WoW text editors that are buggy, so I would have to write a custom text field... Possible, but really annoying)
 * Document add-on API using Curse packager
