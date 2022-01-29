@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+		..\FrameXML\UI.xsd">
+<!--@no-lib-strip@-->
+	<include file="Libs\AceGUI-3.0\AceGUI-3.0.xml" />
+	<Script file="Libs\LibLuaTokenizer\LuaTokenizer.lua" />
+<!--@end-no-lib-strip@-->
+	<Script file="CodeEditor.lua" />
+</Ui>

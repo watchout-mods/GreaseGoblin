@@ -1,4 +1,4 @@
-## Interface: 90005
+## Interface: 90105
 ## Title: Grease Goblin
 ## Version: @project-version@
 ## Notes: In-game automated scripting suite |cFFAAAAAAby watchout@curse.com|r
@@ -13,17 +13,18 @@ Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 Libs\AceAddon-3.0\AceAddon-3.0.lua
 Libs\AceLocale-3.0\AceLocale-3.0.lua
 Libs\AceEvent-3.0\AceEvent-3.0.lua
-Libs\AceGUI-3.0\AceGUI-3.0.xml
+#Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.lua
 Libs\AceDBOptions-3.0\AceDBOptions-3.0.lua
 Libs\AceTimer-3.0\AceTimer-3.0.lua
 
-Libs\LuaTokenizer\LuaTokenizer-1.0.lua
+Libs\LibLuaTokenizer\LuaTokenizer.lua
 
 # Main
 GreaseGoblin.lua
-CodeEditorWidget.lua
 Localization.lua
 Options.lua
 
+# Gui
+Gui\Gui.xml
