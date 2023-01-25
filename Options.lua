@@ -82,6 +82,7 @@ local function Window( ... )
 
 	-- Logic: filling, etc.
 	List:SetCallback("OnGroupSelected", function(obj, event, group, ...)
+		--print(group, ...)
 		if group then
 			editbox:SetText(Addon.Options.profile.Scripts[group] or "")
 			iName:SetText(group)
@@ -111,6 +112,7 @@ local function Window( ... )
 			-- TBI
 		end,
 		Update = function(self, selection)
+			-- print(Selected, selection)
 			wipe(tree)
 			selection = selection or this:GetSelected()
 
