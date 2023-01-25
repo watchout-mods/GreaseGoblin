@@ -1,4 +1,4 @@
-## Interface: 90105
+## Interface: 100005
 ## Title: Grease Goblin
 ## Version: @project-version@
 ## Notes: In-game automated scripting suite |cFFAAAAAAby watchout@curse.com|r
