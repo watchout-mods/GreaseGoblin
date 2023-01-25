@@ -78,7 +78,7 @@ function Addon:OnEnable()
 	end
 end
 
---
+---
 -- Prepares a Goblin (script) with name `id`.
 -- You probably don't want to call this externally.
 -- @param id The unique name of the Goblin to act on
@@ -236,6 +236,14 @@ function Addon:DeleteGoblin(id)
 		GoblinCache[id] = nil;
 		Addon.Options.profile.Scripts[id] = nil;
 	end
+end
+
+---
+-- Returns a goblin working data identified by `id`. Use at own discretion, mostly meant for debug
+-- puroposes.
+-- @param id The unique name of the Goblin to act on
+function Addon:GetGoblin(id)
+	return GoblinCache[id];
 end
 
 local Queue, QueueWorker = {};
